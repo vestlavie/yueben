@@ -1,0 +1,154 @@
+"""doc"""
+# pylint: disable=R0801
+import asyncio
+from email import message
+import logging
+import os
+import string
+from typing import Optional, Union
+
+from wechaty_puppet import FileBox, ScanStatus  # type: ignore
+from datetime import datetime
+
+
+from wechaty import Wechaty, Contact
+from wechaty.user import Message, Room
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+
+os.environ['TOKEN'] = "padtokern here"
+os.environ['WECHATY_PUPPET'] = "wechaty-puppet-padlocal"
+os.environ['WECHATY_PUPPET_SERVICE_ENDPOINT'] = "ip adderss and port"
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
+
+
+def roomid_add(newroomid):
+    #bussiness_Roomlist.add(newroomid)
+    bussiness_Roomlist.append(newroomid)
+
+
+class MyBot(Wechaty):
+    """
+    listen wechaty event with inherited functions, which is more friendly for
+    oop developer
+    """
+    def __init__(self):
+        super().__init__()
+
+    async def on_message(self, msg: Message):
+        """
+        listen for message event
+        """
+        from_contact = msg.talker()
+        text = msg.text()
+        room = msg.room()
+        #增加代码
+        if text == '#ding':
+            conversation: Union[
+                Room, Contact] = from_contact if room is None else room
+            await conversation.ready()
+            await conversation.say('dong')
+            file_box = FileBox.from_url(
+                'https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/'
+                'u=1116676390,2305043183&fm=26&gp=0.jpg',
+                name='ding-dong.jpg')
+            await conversation.say(file_box)
+        if text == '剧本杀':
+            room.say('我看到剧本杀三个字了')
+            Yesornomention = await msg.mention_self()
+            if not Yesornomention:
+# mentionself 取反值
+            #mention_text() 是个coroutine nerver awaited
+                await room.say('我被剧本杀提及了')
+                if room.room_id not in bussiness_Roomlist:
+                    await room.say('这是个新世界，我准备加入了')
+                    roomid_add(room.room_id)
+                    await room.say('我走进了这个世界，这个世界的ID是')
+                    await room.say(room.room_id)
+
+
+
+            #bussiness_Roomlist = bussiness_Roomlist.add(from_contact.get_id())
+                # roomid_add(room.room_id)
+                # await room.say('很高兴来到新世界，这对我是个新的room')
+                # await room.say(str(bussiness_Roomlist))
+
+# and msg.to() is None and msg.mention_self() and room.room_id not in bussiness_Roomlist
+    
+
+
+                
+
+
+    async def on_login(self, contact: Contact):
+        print(f'user: {contact} has login')
+
+    async def on_scan(self, status: ScanStatus, qr_code: Optional[str] = None,
+                      data: Optional[str] = None):
+        contact = self.Contact.load(self.contact_id)
+        print(f'user <{contact}> scan status: {status.name} , '
+              f'qr_code: {qr_code}')
+
+# async def tick(bot:Wechaty):
+#     room = bot.Room.load('<25398595775')
+#     await room.ready()
+#     from datetime import datetime
+#     await room.say('hello ,room')
+
+async def tick(roomnumber):
+    """
+    find a specific room, and say something to it.
+    """
+    roomnumber = roomnumber
+    room = bot.Room.load(roomnumber)
+    await room.ready()
+    await room.say(str(bussiness_Roomlist))
+    await room.say('我在发布组局信息')
+
+    # loop = asyncio.get_event_loop()
+    # task = [asyncio.ensure_future(sendMessageto(i)) for i in bussiness_Roomlist]
+    # loop.run_until_complete(asyncio.wait(task))
+
+
+# async def sendMessageto(i):
+#     room = bot.Room.load(i)
+#     await room.ready()
+#     await room.say('🧧有趣人类厮混中心🧧\n🧧🧧🧧🧧🧧🧧🧧🧧🧧🧧\n2️⃣🈷️5️⃣大年初五星期六🈵️\n13:00《刀鞘》机制沉浸7🈵️\n制3小姐姐等5人🈵️\n')
+
+#     miniProgram = new MiniProgram ({
+#   appid              : 'gh_0aa444a25adc',
+#   title              : '我正在使用Authing认证身份，你也来试试吧',
+#   pagePath           : 'routes/explore.html',
+#   description        : '身份管家',
+#   thumbUrl           : '30590201000452305002010002041092541302033d0af802040b30feb602045df0c2c5042b777875706c6f61645f31373533353339353230344063686174726f6f6d3131355f313537363035393538390204010400030201000400',
+#   thumbKey           : '42f8609e62817ae45cf7d8fefb532e83',
+# })
+    # await room.say(miniProgram)
+
+
+
+# 
+bot: Optional[MyBot] = None
+
+
+async def main():
+    
+    """doc"""
+    global bussiness_Roomlist
+    bussiness_Roomlist = {'25398595775@chatroom','1231@chatroom'}
+
+    # pylint: disable=W0603
+    global bot
+    bot = MyBot()
+    bussiness_Roomlist = ['25398595775@chatroom','20492732200@chatroom']
+    scheduler = AsyncIOScheduler()
+    for i in bussiness_Roomlist:
+        scheduler.add_job(tick,'cron', hour = '3-22', minute = '1-59', args=[i])
+    # scheduler.add_job(tick, 'cron', hour = '5-22', minute = '1-20', args=[bot])
+    scheduler.start()
+    
+    await bot.start()
+
+
+asyncio.run(main())
