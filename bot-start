@@ -24,7 +24,6 @@ log = logging.getLogger(__name__)
 
 
 def roomid_add(newroomid):
-    #bussiness_Roomlist.add(newroomid)
     bussiness_Roomlist.append(newroomid)
 
 
